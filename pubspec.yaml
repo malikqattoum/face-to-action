@@ -1,0 +1,41 @@
+name: face_to_action
+description: "Face-to-Action: Voice logs for service pros"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.5.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  
+  # HTTP & API
+  dio: ^5.4.0
+  
+  # Audio Recording
+  record: ^6.0.0
+  
+  # Secure Token Storage
+  flutter_secure_storage: ^9.0.0
+  
+  # Navigation
+  go_router: ^13.2.0
+  
+  # State Management
+  flutter_bloc: ^8.1.3
+  equatable: ^2.0.5
+  
+  # UI Utilities
+  intl: ^0.19.0
+  shimmer: ^3.0.0
+  google_fonts: ^6.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
