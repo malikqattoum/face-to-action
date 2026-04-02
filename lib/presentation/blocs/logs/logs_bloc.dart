@@ -11,6 +11,7 @@ class LogsBloc extends Bloc<LogsEvent, LogsState> {
     on<LogCreateRequested>(_onCreateRequested);
     on<LogUpdateRequested>(_onUpdateRequested);
     on<LogDeleteRequested>(_onDeleteRequested);
+    on<LogPhotosUploaded>(_onPhotosUploaded);
   }
 
   Future<void> _onFetchRequested(LogsFetchRequested event, Emitter<LogsState> emit) async {
@@ -50,6 +51,21 @@ class LogsBloc extends Bloc<LogsEvent, LogsState> {
     try {
       await _logRepository.deleteLog(event.id);
       final updatedLogs = state.logs.where((l) => l.id != event.id).toList();
+      emit(state.copyWith(status: LogsStatus.loaded, logs: updatedLogs));
+    } catch (e) {
+      emit(state.copyWith(status: LogsStatus.error, errorMessage: e.toString()));
+    }
+  }
+
+  Future<void> _onPhotosUploaded(LogPhotosUploaded event, Emitter<LogsState> emit) async {
+    try {
+      final newPhotos = await _logRepository.uploadPhotos(event.logId, event.imagePaths, caption: event.caption);
+      final updatedLogs = state.logs.map((l) {
+        if (l.id == event.logId) {
+          return l.copyWith(photos: [...l.photos, ...newPhotos]);
+        }
+        return l;
+      }).toList();
       emit(state.copyWith(status: LogsStatus.loaded, logs: updatedLogs));
     } catch (e) {
       emit(state.copyWith(status: LogsStatus.error, errorMessage: e.toString()));

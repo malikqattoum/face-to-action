@@ -11,6 +11,8 @@ class ApiConstants {
   // Log endpoints
   static const String logs = '/logs';
   static String logById(int id) => '/logs/$id';
+  static String logPhotos(int id) => '/logs/$id/photos';
+  static String logQuotePdf(int id) => '/logs/$id/quote/pdf';
 
   // Call endpoints
   static const String calls = '/calls';

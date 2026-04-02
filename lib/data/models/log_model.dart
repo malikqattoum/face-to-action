@@ -9,6 +9,13 @@ class LogEntry {
   final DateTime? recordedAt;
   final String? transcribedText;
   final DateTime createdAt;
+  // AI Extraction fields
+  final String? issueType;
+  final List<String> partsUsed;
+  final double? estimatedPrice;
+  final String? serviceType;
+  // Photos
+  final List<Photo> photos;
 
   LogEntry({
     required this.id,
@@ -21,6 +28,11 @@ class LogEntry {
     this.recordedAt,
     this.transcribedText,
     required this.createdAt,
+    this.issueType,
+    this.partsUsed = const [],
+    this.estimatedPrice,
+    this.serviceType,
+    this.photos = const [],
   });
 
   factory LogEntry.fromJson(Map<String, dynamic> json) {
@@ -35,6 +47,17 @@ class LogEntry {
       recordedAt: json['recorded_at'] != null ? DateTime.parse(json['recorded_at']) : null,
       transcribedText: json['transcribed_text'],
       createdAt: DateTime.parse(json['created_at']),
+      issueType: json['issue_type'],
+      partsUsed: json['parts_used'] != null
+          ? List<String>.from(json['parts_used'])
+          : [],
+      estimatedPrice: json['estimated_price'] != null
+          ? double.tryParse(json['estimated_price'].toString())
+          : null,
+      serviceType: json['service_type'],
+      photos: json['photos'] != null
+          ? (json['photos'] as List).map((p) => Photo.fromJson(p)).toList()
+          : [],
     );
   }
 
@@ -64,6 +87,11 @@ class LogEntry {
     DateTime? recordedAt,
     String? transcribedText,
     DateTime? createdAt,
+    String? issueType,
+    List<String>? partsUsed,
+    double? estimatedPrice,
+    String? serviceType,
+    List<Photo>? photos,
   }) {
     return LogEntry(
       id: id ?? this.id,
@@ -76,6 +104,37 @@ class LogEntry {
       recordedAt: recordedAt ?? this.recordedAt,
       transcribedText: transcribedText ?? this.transcribedText,
       createdAt: createdAt ?? this.createdAt,
+      issueType: issueType ?? this.issueType,
+      partsUsed: partsUsed ?? this.partsUsed,
+      estimatedPrice: estimatedPrice ?? this.estimatedPrice,
+      serviceType: serviceType ?? this.serviceType,
+      photos: photos ?? this.photos,
+    );
+  }
+}
+
+class Photo {
+  final int id;
+  final int logId;
+  final String? caption;
+  final String url;
+  final DateTime createdAt;
+
+  Photo({
+    required this.id,
+    required this.logId,
+    this.caption,
+    required this.url,
+    required this.createdAt,
+  });
+
+  factory Photo.fromJson(Map<String, dynamic> json) {
+    return Photo(
+      id: json['id'],
+      logId: json['log_id'] ?? 0,
+      caption: json['caption'],
+      url: json['url'],
+      createdAt: DateTime.parse(json['created_at']),
     );
   }
 }

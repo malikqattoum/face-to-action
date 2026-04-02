@@ -38,3 +38,14 @@ class LogDeleteRequested extends LogsEvent {
   @override
   List<Object?> get props => [id];
 }
+
+class LogPhotosUploaded extends LogsEvent {
+  final int logId;
+  final List<String> imagePaths;
+  final String? caption;
+
+  const LogPhotosUploaded({required this.logId, required this.imagePaths, this.caption});
+
+  @override
+  List<Object?> get props => [logId, imagePaths, caption];
+}

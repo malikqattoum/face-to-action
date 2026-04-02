@@ -66,6 +66,48 @@ class LogRepository {
     }
   }
 
+  Future<List<Photo>> getPhotos(int logId) async {
+    try {
+      final response = await _client.get(ApiConstants.logPhotos(logId));
+      final List<dynamic> data = response.data['data'];
+      return data.map((json) => Photo.fromJson(json)).toList();
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<List<Photo>> uploadPhotos(int logId, List<String> imagePaths, {String? caption}) async {
+    try {
+      final formData = FormData.fromMap({
+        'photos': await Future.wait(
+          imagePaths.map((path) => MultipartFile.fromFile(
+            path,
+            filename: path.split('/').last,
+          )),
+        ),
+        if (caption != null) 'caption': caption,
+      });
+
+      final response = await _client.postFormData(
+        ApiConstants.logPhotos(logId),
+        formData,
+      );
+
+      final List<dynamic> data = response.data['data'];
+      return data.map((json) => Photo.fromJson(json)).toList();
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<void> deletePhoto(int logId, int photoId) async {
+    try {
+      await _client.delete('${ApiConstants.logPhotos(logId)}/$photoId');
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
   String _handleError(DioException e) {
     if (e.response?.data != null && e.response?.data['message'] != null) {
       return e.response!.data['message'];
