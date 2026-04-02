@@ -1,11 +1,14 @@
 import 'dart:io';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
+import '../../core/constants/api_constants.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/models/log_model.dart';
 import '../blocs/logs/logs_bloc.dart';
@@ -123,17 +126,56 @@ class _LogDetailPageState extends State<LogDetailPage> {
         const SnackBar(content: Text('Generating quote PDF...')),
       );
 
-      // For now, open the URL directly - in a real app you'd download the PDF
-      final url = 'http://10.0.2.2:8000/api/logs/${log.id}/quote/pdf';
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Quote PDF ready: $url')),
+      final dir = await getTemporaryDirectory();
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final sanitizedName = (log.customerName ?? 'Customer').replaceAll(RegExp(r'\s+'), '_');
+      final fileName = 'Quote_${log.id}_${sanitizedName}_$timestamp.pdf';
+      final filePath = '${dir.path}/$fileName';
+
+      final token = await _getToken();
+      if (token == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Not authenticated. Please log in again.')),
+        );
+        return;
+      }
+
+      final dio = Dio();
+      final response = await dio.download(
+        '${ApiConstants.baseUrl}/logs/${log.id}/quote/pdf',
+        filePath,
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Accept': 'application/pdf',
+          },
+          responseType: ResponseType.bytes,
+        ),
       );
+
+      final file = File(filePath);
+      if (!await file.exists() || await file.length() < 1000) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('PDF was not generated correctly. Does this log exist?')),
+          );
+        }
+        return;
+      }
+
+      await OpenFile.open(filePath);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to generate quote: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to generate quote: $e')),
+        );
+      }
     }
+  }
+
+  Future<String?> _getToken() async {
+    const storage = FlutterSecureStorage();
+    return storage.read(key: 'auth_token');
   }
 
   @override

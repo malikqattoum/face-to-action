@@ -75,6 +75,30 @@ class ApiClient {
     return _dio.delete(path);
   }
 
+  /// Download a binary file (PDF, etc.) to the given savePath.
+  /// Returns the saved file path on success.
+  Future<String> downloadFile(String url, String savePath, {
+    void Function(int received, int total)? onProgress,
+  }) async {
+    final token = await _storage.read(key: 'auth_token');
+    final options = Options(
+      headers: {
+        if (token != null) 'Authorization': 'Bearer $token',
+        'Accept': '*/*',
+      },
+      responseType: ResponseType.bytes,
+    );
+
+    await _dio.download(
+      url.startsWith('http') ? url : baseUrl.replaceAll('/api', '') + url,
+      savePath,
+      options: options,
+      onReceiveProgress: onProgress,
+    );
+
+    return savePath;
+  }
+
   Future<void> setToken(String token) async {
     await _storage.write(key: 'auth_token', value: token);
   }
